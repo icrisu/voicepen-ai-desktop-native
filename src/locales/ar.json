@@ -1,0 +1,80 @@
+{
+  "common": {
+    "copy": "نسخ",
+    "use": "استخدام",
+    "close": "إغلاق",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "loading": "جارٍ التحميل...",
+    "error": "خطأ",
+    "settings": "الإعدادات",
+    "notes": "الملاحظات",
+    "history": "السجل"
+  },
+  "overlay": {
+    "recording": "تسجيل",
+    "processing": "معالجة",
+    "pressAltD": "اضغط Alt+D للإملاء",
+    "pressAltN": "اضغط Alt+N للمتابعة",
+    "echowrite": "إيكورايت",
+    "odin": "الملاحظات",
+    "aiAgent": "وكيل الذكاء الاصطناعي",
+    "latest": "الأخير",
+    "suggestion": "اقتراح",
+    "refinement": "تحسين",
+    "transcript": "النص"
+  },
+  "settings": {
+    "apiKeys": "مفاتيح API",
+    "activation": "التفعيل",
+    "dictate": "الإملاء",
+    "odinSettings": "إعدادات الملاحظات",
+    "language": "اللغة",
+    "appearance": "المظهر",
+    "openaiKey": "مفتاح OpenAI API",
+    "openaiKeyPlaceholder": "sk-...",
+    "googleCloudKey": "مفتاح Google Cloud API",
+    "licenseKey": "مفتاح الترخيص",
+    "activate": "تفعيل",
+    "trialDaysRemaining": "{{days}} أيام متبقية في الفترة التجريبية",
+    "trialExpired": "انتهت الفترة التجريبية",
+    "activated": "مُفعَّل",
+    "transcriptModel": "نموذج النسخ",
+    "cleanModel": "نموذج التنقيح",
+    "recordingMode": "وضع التسجيل",
+    "recordingLanguage": "لغة التسجيل",
+    "suggestions": "الاقتراحات",
+    "voice": "الصوت",
+    "voiceProvider": "مزود الصوت",
+    "snippets": "المقتطفات",
+    "addSnippet": "إضافة مقتطف",
+    "trigger": "المشغّل",
+    "replacement": "الاستبدال",
+    "maxRecordingTime": "الحد الأقصى لوقت التسجيل (ثانية)",
+    "uiLanguage": "لغة الواجهة"
+  },
+  "languages": {
+    "en": "الإنجليزية",
+    "ar": "العربية",
+    "he": "العبرية",
+    "es": "الإسبانية",
+    "fr": "الفرنسية",
+    "de": "الألمانية",
+    "pt": "البرتغالية",
+    "zh": "الصينية",
+    "ja": "اليابانية"
+  },
+  "tts": {
+    "browser": "تحويل النص إلى كلام (مجاني)",
+    "openai": "OpenAI TTS",
+    "google": "Google Cloud TTS"
+  },
+  "modes": {
+    "default": "افتراضي",
+    "email": "بريد إلكتروني",
+    "notes": "ملاحظات",
+    "casual": "غير رسمي",
+    "professional": "احترافي"
+  }
+}
