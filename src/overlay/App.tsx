@@ -69,13 +69,17 @@ export default function App() {
 
   // Resize window to card area when interactive card is visible so other apps remain accessible
   useEffect(() => {
+    if (isRefinementRecording) {
+      void invoke("restore_overlay_size");
+      return;
+    }
     const hasInteractiveCard = refinementsVisible || odinMainUIVisible || transcriptVisible || cardState === "error";
     if (hasInteractiveCard) {
       void invoke("resize_overlay_to_card");
     } else {
       void invoke("restore_overlay_size");
     }
-  }, [refinementsVisible, odinMainUIVisible, transcriptVisible, cardState]);
+  }, [refinementsVisible, odinMainUIVisible, transcriptVisible, cardState, isRefinementRecording]);
 
   // Load settings on mount
   useEffect(() => {
@@ -85,114 +89,114 @@ export default function App() {
 
   // Listen for Tauri events
   useEffect(() => {
-    const unlisteners: (() => void)[] = [];
-
-    void listen<string>("set-mode", (e) => {
-      const mode = e.payload;
-      resetOverlayState();
-      cancelledRef.current = false;
-      if (mode === "echowrite") {
-        void handleEchoWriteTrigger();
-      } else if (mode === "notes") {
-        void handleNotesTrigger();
-      }
-    }).then((u) => unlisteners.push(u));
-
-    void listen<string>("toggle-mode", (e) => {
-      const mode = e.payload;
-      if (mode === "echowrite") {
-        void handleEchoWriteTrigger();
-      } else if (mode === "notes") {
-        void handleNotesTrigger();
-      }
-    }).then((u) => unlisteners.push(u));
-
-    void listen<{ raw: string; cleaned: string; suggestions?: string[] }>("transcription_result", (e) => {
-      isProcessingRef.current = false;
-      if (cancelledRef.current) return;
-      const { cleaned, suggestions } = e.payload;
-      setCleanedText(cleaned);
-      setCardState("result");
-      setOdinInfoVisible(false);
-      const s = settingsRef.current;
-      if (s.transcriptDynamicRefinements) {
-        const cards: RefinementCard[] = [{ id: crypto.randomUUID(), text: cleaned }];
-        const suggestionText = s.suggestions && suggestions && suggestions.length > 0
-          ? aggregateSuggestionsText(suggestions) : null;
-        if (suggestionText) cards.push({ id: crypto.randomUUID(), text: suggestionText, isSuggestion: true });
-        setRefinementCards(cards);
-        setRefinementsVisible(true);
-        if (s.suggestionVoice && suggestionText) {
-          speakTimeoutRef.current = setTimeout(() => { speakTimeoutRef.current = null; void speakText(suggestionText, s); }, 200);
+    const promises: Promise<() => void>[] = [
+      listen<string>("set-mode", (e) => {
+        const mode = e.payload;
+        resetOverlayState();
+        cancelledRef.current = false;
+        if (mode === "echowrite") {
+          void handleEchoWriteTrigger();
+        } else if (mode === "notes") {
+          void handleNotesTrigger();
         }
-      } else {
-        setTranscriptVisible(true);
-      }
-    }).then((u) => unlisteners.push(u));
+      }),
 
-    void listen<{ text: string }>("refinement_result", (e) => {
-      if (cancelledRef.current) return;
-      setRefinementCards((prev) => [{ id: crypto.randomUUID(), text: e.payload.text }, ...prev]);
-      setIsRefinementRecording(false);
-      isRecordingRef.current = false;
-      setOdinInfoVisible(false);
-      setCardState("result");
-    }).then((u) => unlisteners.push(u));
+      listen<string>("toggle-mode", (e) => {
+        const mode = e.payload;
+        if (mode === "echowrite") {
+          void handleEchoWriteTrigger();
+        } else if (mode === "notes") {
+          void handleNotesTrigger();
+        }
+      }),
 
-    void listen<{ userMessage: string; assistantMessage: string; noteSavedCategory?: string | null }>("odin_combo_result", (e) => {
-      const { userMessage, assistantMessage, noteSavedCategory } = e.payload;
-      const now = Date.now();
-      setOdinHistory((prev) => [
-        ...prev,
-        { role: "user", content: userMessage, timestamp: now },
-        { role: "assistant", content: assistantMessage, timestamp: now, noteSavedCategory },
-      ]);
-      isRecordingRef.current = false;
-      isOdinProcessingRef.current = false;
-      odinComboVisibleRef.current = false;
-      odinMainUIVisibleRef.current = true;
-      setOdinComboVisible(false);
-      setOdinMainUIVisible(true);
-      setCardState("idle");
-      const cfg = odinConfigRef.current;
-      if (cfg.suggestionVoice) {
-        speakTimeoutRef.current = setTimeout(() => { speakTimeoutRef.current = null; void speakText(assistantMessage, cfg); }, 200);
-      }
-    }).then((u) => unlisteners.push(u));
+      listen<{ raw: string; cleaned: string; suggestions?: string[] }>("transcription_result", (e) => {
+        isProcessingRef.current = false;
+        if (cancelledRef.current) return;
+        const { cleaned, suggestions } = e.payload;
+        setCleanedText(cleaned);
+        setCardState("result");
+        setOdinInfoVisible(false);
+        const s = settingsRef.current;
+        if (s.transcriptDynamicRefinements) {
+          const cards: RefinementCard[] = [{ id: crypto.randomUUID(), text: cleaned }];
+          const suggestionText = s.suggestions && suggestions && suggestions.length > 0
+            ? aggregateSuggestionsText(suggestions) : null;
+          if (suggestionText) cards.push({ id: crypto.randomUUID(), text: suggestionText, isSuggestion: true });
+          setRefinementCards(cards);
+          setRefinementsVisible(true);
+          if (s.suggestionVoice && suggestionText) {
+            speakTimeoutRef.current = setTimeout(() => { speakTimeoutRef.current = null; void speakText(suggestionText, s); }, 200);
+          }
+        } else {
+          setTranscriptVisible(true);
+        }
+      }),
 
-    void listen<void>("recording_cancelled", () => {
-      if (switchingFeaturesRef.current) { switchingFeaturesRef.current = false; return; }
-      closeCard();
-    }).then((u) => unlisteners.push(u));
+      listen<{ text: string }>("refinement_result", (e) => {
+        if (cancelledRef.current) return;
+        setRefinementCards((prev) => [{ id: crypto.randomUUID(), text: e.payload.text }, ...prev]);
+        setIsRefinementRecording(false);
+        isRecordingRef.current = false;
+        setOdinInfoVisible(false);
+        setCardState("result");
+      }),
 
-    void listen<{ error: string }>("transcription_error", (e) => {
-      isProcessingRef.current = false;
-      setCardState("error");
-      setErrorMsg(e.payload.error);
-      isRecordingRef.current = false;
-      isOdinProcessingRef.current = false;
-      odinComboVisibleRef.current = false;
-      odinMainUIVisibleRef.current = false;
-      setIsRefinementRecording(false);
-      setOdinInfoVisible(false);
-      setOdinComboVisible(false);
-      setOdinMainUIVisible(false);
-    }).then((u) => unlisteners.push(u));
+      listen<{ userMessage: string; assistantMessage: string; noteSavedCategory?: string | null }>("odin_combo_result", (e) => {
+        const { userMessage, assistantMessage, noteSavedCategory } = e.payload;
+        const now = Date.now();
+        setOdinHistory((prev) => [
+          ...prev,
+          { role: "user", content: userMessage, timestamp: now },
+          { role: "assistant", content: assistantMessage, timestamp: now, noteSavedCategory },
+        ]);
+        isRecordingRef.current = false;
+        isOdinProcessingRef.current = false;
+        odinComboVisibleRef.current = false;
+        odinMainUIVisibleRef.current = true;
+        setOdinComboVisible(false);
+        setOdinMainUIVisible(true);
+        setCardState("idle");
+        const cfg = odinConfigRef.current;
+        if (cfg.suggestionVoice) {
+          speakTimeoutRef.current = setTimeout(() => { speakTimeoutRef.current = null; void speakText(assistantMessage, cfg); }, 200);
+        }
+      }),
 
-    void listen<{ error: string }>("recording_error", (e) => {
-      isProcessingRef.current = false;
-      setCardState("error");
-      setErrorMsg(e.payload.error);
-      isRecordingRef.current = false;
-      isOdinProcessingRef.current = false;
-      odinComboVisibleRef.current = false;
-      odinMainUIVisibleRef.current = false;
-      setOdinInfoVisible(false);
-      setOdinComboVisible(false);
-      setOdinMainUIVisible(false);
-    }).then((u) => unlisteners.push(u));
+      listen<void>("recording_cancelled", () => {
+        if (switchingFeaturesRef.current) { switchingFeaturesRef.current = false; return; }
+        closeCard();
+      }),
 
-    return () => unlisteners.forEach((u) => u());
+      listen<{ error: string }>("transcription_error", (e) => {
+        isProcessingRef.current = false;
+        setCardState("error");
+        setErrorMsg(e.payload.error);
+        isRecordingRef.current = false;
+        isOdinProcessingRef.current = false;
+        odinComboVisibleRef.current = false;
+        odinMainUIVisibleRef.current = false;
+        setIsRefinementRecording(false);
+        setOdinInfoVisible(false);
+        setOdinComboVisible(false);
+        setOdinMainUIVisible(false);
+      }),
+
+      listen<{ error: string }>("recording_error", (e) => {
+        isProcessingRef.current = false;
+        setCardState("error");
+        setErrorMsg(e.payload.error);
+        isRecordingRef.current = false;
+        isOdinProcessingRef.current = false;
+        odinComboVisibleRef.current = false;
+        odinMainUIVisibleRef.current = false;
+        setOdinInfoVisible(false);
+        setOdinComboVisible(false);
+        setOdinMainUIVisible(false);
+      }),
+    ];
+
+    return () => { promises.forEach((p) => void p.then((u) => u())); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
