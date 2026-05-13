@@ -50,6 +50,31 @@ fn hide_overlay(app: tauri::AppHandle) {
 }
 
 #[tauri::command]
+fn resize_overlay_to_card(app: tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("overlay") {
+        if let Ok(Some(monitor)) = w.primary_monitor() {
+            let size = monitor.size();
+            let scale = monitor.scale_factor();
+            let screen_w = size.width as f64 / scale;
+            let screen_h = size.height as f64 / scale;
+            let win_h = 620.0_f64;
+            let card_win_w = 460.0_f64;
+            let _ = w.set_size(LogicalSize::new(card_win_w, win_h));
+            let _ = w.set_position(LogicalPosition::new(screen_w - card_win_w, screen_h - win_h - 80.0));
+            let _ = w.set_ignore_cursor_events(false);
+        }
+    }
+}
+
+#[tauri::command]
+fn restore_overlay_size(app: tauri::AppHandle) {
+    position_overlay(&app);
+    if let Some(w) = app.get_webview_window("overlay") {
+        let _ = w.set_ignore_cursor_events(true);
+    }
+}
+
+#[tauri::command]
 fn open_settings(app: tauri::AppHandle) {
     let _ = app.show(); // bring app to foreground in accessory mode
     if let Some(w) = app.get_webview_window("settings") {
@@ -89,6 +114,7 @@ fn position_overlay(app: &tauri::AppHandle) {
 fn show_overlay(app: &tauri::AppHandle, mode: &str) {
     position_overlay(app);
     if let Some(w) = app.get_webview_window("overlay") {
+        let _ = w.set_ignore_cursor_events(true);
         let _ = w.emit("set-mode", mode);
         let _ = w.show();
         let _ = w.set_focus();
@@ -181,6 +207,8 @@ pub fn run() {
             get_browser_url,
             hide_overlay,
             open_settings,
+            resize_overlay_to_card,
+            restore_overlay_size,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

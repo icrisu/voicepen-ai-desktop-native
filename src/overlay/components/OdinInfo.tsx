@@ -13,7 +13,7 @@ export default function OdinInfo({ visible, state }: Props) {
         <AnimatePresence>
             {visible && (
                 <motion.div
-                    className="fixed bottom-15 z-[2147483647] bg-[#0A0A0A]/95 backdrop-blur-xl rounded-full inset-x-0 mx-auto w-fit px-5 py-3 text-white border border-[#ffffff1a] shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+                    className="fixed bottom-15 z-[2147483647] bg-[#0A0A0A]/95 backdrop-blur-xl rounded-full inset-x-0 mx-auto w-fit px-5 py-3 text-white border border-[#ffffff1a] shadow-[0_4px_20px_rgba(0,0,0,0.4)] pointer-events-auto"
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 4 }}

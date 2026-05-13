@@ -67,6 +67,16 @@ export default function App() {
   useEffect(() => { refinementCardsRef.current = refinementCards; }, [refinementCards]);
   useEffect(() => { odinHistoryRef.current = odinHistory; }, [odinHistory]);
 
+  // Resize window to card area when interactive card is visible so other apps remain accessible
+  useEffect(() => {
+    const hasInteractiveCard = refinementsVisible || odinMainUIVisible || transcriptVisible || cardState === "error";
+    if (hasInteractiveCard) {
+      void invoke("resize_overlay_to_card");
+    } else {
+      void invoke("restore_overlay_size");
+    }
+  }, [refinementsVisible, odinMainUIVisible, transcriptVisible, cardState]);
+
   // Load settings on mount
   useEffect(() => {
     void getStorage("odinSettings").then(setSettings);

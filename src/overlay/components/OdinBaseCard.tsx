@@ -16,7 +16,7 @@ export default function OdinBaseCard({ visible = true, title = "Info", onClose, 
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed right-8 bottom-15 z-[2147483646] w-[420px] font-sans text-[13px]"
+          className="fixed right-8 bottom-15 z-[2147483646] w-[420px] font-sans text-[13px] pointer-events-auto"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 8 }}
